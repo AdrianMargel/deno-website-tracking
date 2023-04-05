@@ -18,7 +18,7 @@ const tracks=db.collection("tracks");
 const PAGE_ROUTE = new URLPattern({ pathname: "/page" });
 
 function validateString(val){
-	return string.substring((typeof val == "string")?val:"",100);
+	return (typeof val == "string"?val:"").substring(0,100);
 }
 
 const handler=async (request,connInfo)=>{
