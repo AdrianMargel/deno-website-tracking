@@ -33,6 +33,7 @@ router.post("/page", async (ctx) => {
 		ua,
 		ip,
 		url,
+		type:"page",
 		info,
 		time
 	});
