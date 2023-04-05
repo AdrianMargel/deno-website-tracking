@@ -25,14 +25,13 @@ router.post("/page", async (ctx) => {
 	const req=ctx.request;
 	const ua=req.headers.get("user-agent")??"Unknown";
 	const ip=req.ip;
-	const url=req.url.href;
+	// const url=req.url.href;
 	const info=validateString(await req.body().value);
 	const time=new Date().getTime();
 	tracks.insertOne({
 		_id: new ObjectId(),
 		ua,
 		ip,
-		url,
 		type:"page",
 		info,
 		time
