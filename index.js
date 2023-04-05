@@ -1,4 +1,5 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { Application, Router, Status } from "https://deno.land/x/oak/mod.ts";
+import { oakCors } from "https://deno.land/x/cors/mod.ts";
 import {
   MongoClient,
   ObjectId,
@@ -15,34 +16,32 @@ const client = new MongoClient({
 const db=client.database("website-tracking");
 const tracks=db.collection("tracks");
 
-const PAGE_ROUTE = new URLPattern({ pathname: "/page" });
-
 function validateString(val){
 	return (typeof val == "string"?val:"").substring(0,100);
 }
 
-const handler=async (request,connInfo)=>{
-	const ua=request.headers.get("user-agent")??"Unknown";
-	const ip=connInfo?.remoteAddr??"Unknown";
-
-	const url=request.url;
-	if(PAGE_ROUTE.exec(url)&&request.method=="POST"){
-		const body=await request.json();
-		tracks.insertOne({
-			_id: new ObjectId(),
-			ua: ua,
-			ip: ip,
-			url: url,
-			info: validateString(body.info),
-			time: new Date().getTime()
-		});
-		return new Response(null, {
-			status: 200
-		});
-	}
-	return new Response(null, {
-		status: 404
+const router = new Router();
+router.post("/page", async (ctx) => {
+	const req=ctx.request;
+	const ua=req.headers.get("user-agent")??"Unknown";
+	const ip=req.ip;
+	const url=req.url.href;
+	const info=validateString(await req.body().value);
+	const time=new Date().getTime();
+	tracks.insertOne({
+		_id: new ObjectId(),
+		ua,
+		ip,
+		url,
+		info,
+		time
 	});
-};
+	ctx.response.status=Status.OK;
+});
 
-serve(handler);
+const app = new Application();
+app.use(oakCors());// Enable CORS for All Routes
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+await app.listen({ port: 8000 });
